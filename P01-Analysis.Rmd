@@ -1,0 +1,238 @@
+---
+title: 'P1 & P2-Soil Science: Golf Green Data'
+author: "David rt Fraser"
+date: "January 16, 2016"
+output: pdf_document
+---
+******
+##Simple Linear Regression and Correlation
+******
+Perhaps the most expensive grass to grow and maintain are the varieties used for golf greens.  At the University of Guelph extensive research has been carried out for many years on the science of growing grass.  "An ideal golf green soil mixture should have physical properties that allow continuous use with minimum maintenance.  Desirable characteristics include infiltration rates large enough to absorb heavy rainfall, resistance to compaction, adequate water-holding capacity, and adequate aeration.  In addition, these characteristics should not deteriorate over a long period of time." (Brown and Duble (1975) Agronomy J. 67:647-652.)
+
+Norm McCollum of the Guelph Turf Grass Institute recently conducted a pilot study to determine a preliminary model for the water infiltration rate for established creeping bent-grass, Pennlinks.  Norm believed that the infiltration rate increases as the grass density increases.  Thus he hypothesized a linear model where Y = infiltration rate (cm/hr) and X = grass density (g/$cm^3$).  From each of 15 randomly selected golf greens he determined the infiltration rate and density of the grass.  the purpose of this part of the assignment is to perform a complete statistical analysis of this data and to make recommendations about the relationship between Y and X to Norm.  
+
+******
+##Part 1: Soil Science: Golf Green Data
+******
+###**1. Construct a scatter diagram of Y vs. X.**
+```{r}
+setwd("~/Documents/StudentUndergraduate/STAT 2050/1- Regression & Correlation Analysis")
+library(xlsx)
+GolfGreen<-read.xlsx("P01-SoilScienceGolfGreenData.xlsx",sheetIndex=1, header=TRUE)
+GolfGreen
+names(GolfGreen) <- c("Green", "X", "Y")
+plot(GolfGreen$X,GolfGreen$Y, main="Water Infiltration Rate: Creeping Bentgrass & Golf Greens", xlab ="Green Grass Density (g/cm^3)", ylab="Infiltration rate (cm/hr)")
+```
+
+###**2. What is the theortical model for an observation?**  
+The theoretical model for an observation is $Y = \alpha + \beta\cdot{X_i} + \epsilon_i$ for i = 1,..., 15.  It is also assumed that errors are NI (0, $\sigma^2$).
+
+###**3. What are the estimates of the parameters involved in the model equation?**  
+```{r}
+model <- lm(Y~X,GolfGreen)
+summary(model)
+b <- round(model$coefficients[[2]],3)
+a <- round(model$coefficients[[1]],3)
+```
+a) The slope estimate is denoted by $\hat{\beta}$ or b = `r b`.  This means that a 1 $g/cm^3$ increase in grass density corresponds with a `r b` cm/hr increase in infiltration rate.
+b) The intercept estimate is denoted by $\hat{\alpha}$ or a = `r a`.  This is the place where the regression line intersects the Y-axis.
+
+###**4. (a) State the estimated model equation, and (b) superimpose it on your scatter diagram.**  
+a) The estimated model equation is: $\hat{Y} = `r a` + `r b`\cdot{X}$.
+
+b) 
+```{r}
+plot(GolfGreen$X,GolfGreen$Y, main="Water Infiltration Rate: Creeping Bentgrass & Golf Greens", xlab ="Green Grass Density (g/cm^3)", ylab="Infiltration rate (cm/hr)")
+abline(model)
+```
+
+###**5. What is the estimate of $\sigma^2$ the true variance about the regression line?**  
+```{r}
+attributes(summary(model))
+sigma.sq<-round((summary(model)$sigma)^2,3)
+```
+
+The estimator of $\sigma^2$ is $\hat{\sigma^2} = \frac{SS(E)}{(n-2)}$ = `r sigma.sq`
+
+###**6. (a) What is the value of the standard error of the intercept estimator, i.e., SE(a)?  (b) What is the value of the standard error of the slope estimator, i.e., SE(b)?**  
+``` {r}
+SEa <- round(summary(model)$coefficients[1,2],3)
+SEb <- round(summary(model)$coefficients[2,2],3)
+```
+(a) $SE(a) = \sqrt[]{(s^2_E\cdot[\frac{1}{n}+\frac{\overline{x}^2}{SS(x)}]}$ = `r SEa`.  
+(b) SE(b) = $\sqrt[]{\frac{s^2_E}{SS(x)}}$ = `r SEb`.
+
+###**7. (a) What is the 95% confidence interval for $\alpha$, the Y-intercept parameter?  ($t_{13;0.025}$ = `r round(abs(qt(.025,summary(model)$df[2])),3)`).  (b)  What is the 95% confidence interval for $\beta$, the regression parameter?**  
+```{r}
+t13.025<-qt(.025,summary(model)$df[2])
+n <- 15
+dfErr <- n-2
+```
+(a) The confidence interval for $\alpha$ is given by: $a \pm t_{n-2; 0.025}\cdot{SE(a)}$ which in our case is (`r round(a+SEa*t13.025,3)`, `r round(a-SEa*t13.025,3)`).  
+(b) The confidence interval for $\beta$ is given by $b \pm t_{n-2; 0.025}\cdot{SE(b)}$ which in our case is (`r round(b+SEb*t13.025,3)`, `r round(b-SEb*t13.025,3)`).  
+
+###**8. (a) What is the estimate of the expected value of Y (i.e., the population mean) at $X^* = 1.4$?  (b) What is the standard error of this estimate? (c) What is the 95% confidence interval for this population mean?  (d) What is the width of this interval?  (e) Will the width increase if the confidence level is increased to 99%?**  
+```{r}
+xbar <- mean(GolfGreen$X)
+SSx <- sum(GolfGreen$X^2)-sum(GolfGreen$X)^2/15
+SEmubar <- round(sqrt(sigma.sq*(1/n+(1.4-xbar)^2/SSx)),3)
+```
+(a) $\mu_{\overline{Y}|X^*}=\overline{Y}$=$a+bX^*$=`r round(a+b*1.4,3)`.
+(b) SE($\mu_{\overline{Y}|X^*}$)=$\sqrt[]{s^{2}_{E}[\frac{1}{n}+\frac{(x-\bar{x})^2}{SS(x)}]}$ = `r SEmubar`.
+(c) $\mu_{\overline{Y}|X^*}\pm t_{n-2;0.025}SE(\mu_{\overline{Y}|X^*})$=(`r round((a+b*1.4)+(t13.025*SEmubar),3)`, `r round((a+b*1.4)-(t13.025*SEmubar),3)`).
+(d) The width of this interval is: `r round((a+b*1.4)-(t13.025*SEmubar),3)-round((a+b*1.4)+(t13.025*SEmubar),3)`.
+(e) Yes, increasing the confidence level will result in a wider interval.
+
+###**9. (a) What is the predicted Y value for $X^*$ = 1.4? (b) What is the associated standard error? (c) What is the 95% prediction interval for the true value of Y at $X^*$ = 1.4?**
+```{r}
+SEmuhat <- round(sqrt(sigma.sq*(1+1/n+(1.4-xbar)^2/SSx)),3)
+```
+(a)  Since X*=1.4 $\hat{Y}=a+1.4b$. So $\hat{Y}$= `r round(a+b*1.4,3)`.  
+(b) SE($\mu_{\hat{Y}|X^*}$)=$\sqrt[]{1+\frac{1}{n}+\frac{(x-\bar{x})^2}{SS(x)}}$ = `r round(sqrt(sigma.sq*(1+1/n+(1.4-xbar)^2/SSx)),3)`.  
+(c) The 95% CI for the true value of Y at $X^*$ = 1.4 is (`r  round(a+b*1.4+t13.025*SEmuhat,3)`, `r round(a+b*1.4-t13.025*SEmuhat,3)`).  
+
+###**10. (a) To experience the concept of prediction bands that increase in magnitude as the distance away from the mean of the X's increases, construct prediction limits for the true value of Y at: X=1.35, X=1.40, X=$\overline{X}$, X=1.50, and X=1.55.  You may wish to draw these on your scatter diagram.  You should be aware that when a continous line is drawn through these limits, the curved lines are called the "prediction bands for the regression". (b) Is the SE at X=1.35 greater than the SE at X = 1.55? Why?**
+(a)  
+```{r}
+plot(GolfGreen$X,GolfGreen$Y, main="Water Infiltration Rate: Creeping Bentgrass & Golf Greens", xlab ="Green Grass Density (g/cm^3)", ylab="Infiltration rate (cm/hr)")
+abline(model,col="red")
+prd<-predict.lm(model, interval="predict")
+lines(GolfGreen$X,prd[,2],col="red",lty=2)
+lines(GolfGreen$X,prd[,3],col="red",lty=2)
+```  
+
+(b) Yes the SE at X=1.35 is greater than the SE at X=1.55 because X=1.35 is further from the mean of 1.46 than X=1.55.
+
+###**11. Apply the t-test to discover if the variation in X contributes to the variation in Y. (This is the second valid way to establish a significant relationship between two variables.)  You should become familiar with setting up such a test according to the following format:**
+(a) TEST: $H_{O}:\beta=0$ & $H_{A}:\beta\neq0$.  
+(b) DECISION RULE: Reject $H_{O}$ at the 5% level of significance if $t_{obs} > t_{critical}$.  
+(c) VALUE of CRITICAL VALUE: $t_{n-2; 0.025}$=`r round(abs(t13.025),3)`.  
+(d) VALUE of the TEST STATISTIC: t=$\frac{b-\beta}{SE(b)}$=`r round((b-0)/SEb,3)`.  
+(e) CONCLUSION: We would reject the null hypothesis $H_{O}$.  There does appear to be a significant relationship between infiltration rate (Y) and grass density (X).  
+
+###**12. One can also use the analysis of variance (ANOVA) method to test for the significance of regression. (a) Complete an ANOVA table to test $H_{O}:\beta=0$ & $H_{A}:\beta\neq0$. (b) State your conclusion.**
+(a) 
+```{r}
+anova(model)
+fstat <- round(anova(model)$"F value"[1],3)
+```
+(b) From this ANOVA we see that the F-statistic is `r fstat`, so we reject $H_{O}$.
+
+###**13. (a) What is the estimate of the correlation coefficient, $\rho$?  (b) What is the value of the coefficient of determination (i.e., CD=$r^2\cdot100%$)? (c) Interpret the value found in (b) in the context of the variables involved.**
+```{r}
+rho <- round(sqrt(summary(model)$"r.squared"),3)
+```
+(a) $\hat\rho$=r=`r rho`.
+(b) CD=`r round(rho^2*100,3)`.  
+(c) The coefficient of determination tells us how much of the variation seen in the Y values can be accounted for based on the regression on X; in this case it means that about `r round(rho^2*100,1)`% of the variation is accounted for.
+
+###**14. Refer to the format used in Question 11 to set up an appropriate t-test for the significance of the correlation coefficient.  What is the value of the test statistic?**
+t=$\frac{r-\rho}{\sqrt[]{\frac{1-r^2}{n-2}}}$.  However, I also know that this test statistic is the same value as the test statistic for the regression t-test from question 11.  Therefore, t=`r round(abs(t13.025),3)`.   
+
+###**15. What is the point estimate of the infiltration rate for a grass density of 1.4 g/$cm^3$?**
+$\hat{Y}=a+bX^*$=`r round(a+b*1.4,2)`.  
+
+###**16. (a) What is the point estimate of the grass density for an infiltration rate of 80 cm/hr?  Note: this inverse estimation is best reserved for Model I situations and is given by: $X_{0}=\frac{Y_{0}-a}{b}$. (b) What is the associated 95% confidence interval?  Find both the approximate and exact CI.**
+```{r}
+x0 <- round((80-a)/b,3)
+SSReg <- round(b^2*SSx,3)
+approx.int.up <- round(x0-t13.025*sqrt(sigma.sq*(x0-xbar)^2/SSReg),3)
+approx.int.low <- round(x0+t13.025*sqrt(sigma.sq*(x0-xbar)^2/SSReg),3)
+ybar <- mean(GolfGreen$Y)
+exact.int.up <- round((xbar + b*(80-ybar)/(b^2-(t13.025*SEb)^2))-t13.025/(b^2-(t13.025*SEb)^2)*sqrt(sigma.sq*(n+1)*(b^2-(t13.025*SEb)^2)/n),3)
+exact.int.low <- round((xbar + b*(80-ybar)/(b^2-(t13.025*SEb)^2))+t13.025/(b^2-(t13.025*SEb)^2)*sqrt(sigma.sq*(n+1)*(b^2-(t13.025*SEb)^2)/n),3)
+```
+(a) $\frac{80-a}{b}$=`r x0`.  
+(b) The approximate interval is $X_{0}\pm t_{n-2;0.025}\sqrt[]{s^2_E\cdot\frac{(X_0-\overline{X})^2}{SS(Reg)}}$= (`r approx.int.low`, `r approx.int.up`).  
+The exact interval takes the form:  
+$(\overline{X}+b\cdot\frac{Y_0-\overline{Y}}{b^2-(t_{n-2;0.025}\cdot{SE(b)})^2})\pm\frac{t_{n-2;0.025}}{b^2-(t_{n-2;0.025}\cdot{SE(b)})^2}\cdot\sqrt[]{s^2_{E}\cdot(n+1)\cdot\frac{b^2-(t_{n-2;0.025}\cdot{SE(b)})^2}{n}}$= (`r exact.int.low`, `r exact.int.up`).
+
+###**17. Since this is a Model II type data set (i.e., the values of the independent variable are not fixed), interchange the roles of X and Y in this data, and reanalyze the following key statistics: (a) Compare the values of the following key statistics: a, b, r, $s^2_E$, t, F. (b) How many of the above statistics have changed values? (c) What have you learned from this comparison?**
+```{r}
+modelT <- lm(X~Y,GolfGreen)
+summary(modelT)
+bT <- round(modelT$coefficients[[2]],3)
+aT <- round(modelT$coefficients[[1]],3)
+rT <- round(sqrt(summary(modelT)$"r.squared"),3)
+sigma.sqT<-round((summary(modelT)$sigma)^2,3)
+fstatT<- round(summary(modelT)$"fstatistic"[1],3)
+```
+(a)
+Variable  | Y ~ X | X ~ Y |
+------------- | ------------- | ------------- |
+a |`r a`|`r aT`|
+b |`r b`|`r bT`|
+r |`r rho`|`r rT`|
+$s^2_E$|`r sigma.sq`|`r sigma.sqT`|
+t |`r round(abs(t13.025),3)`|`r round(abs(t13.025),3)`|
+F |`r fstat`|`r fstatT`|
+
+(b) Three of the above statistics have changed: the intercept a, slope b, and variance $s^2_E$.  
+(c) That when you interchange the dependent and independent variables the estimators of the intercept, slope and variance change.
+
+******
+##Part 2: Some Theoretical Questions Related to Part 1
+******
+**1. (a) Is this a model I or model II situation?**  
+Since the values of the independent variable X are not fixed, this is a model II situation.
+
+**(b) Are we attempting to establish a causal relationship between the two variables, infiltration rate and grass density?**  
+No we are not attempting to establish a causal relationship; merely a correlation.
+
+**(c) Are we trying to determine if the two variables, X and Y, are linearly related?**  
+Yes, we are interested in whether or not X and Y are linearly related.
+
+**2. List the parameters involved in the model, which consists of the model equation and the underlying assumptions.**  
+The parameters from he model are $\alpha$, and $\beta$.  The parameter from the assumptions is $\sigma^2$.
+
+**3. What are the units of b?**  
+The units of b are $g/cm^3$ per cm/hr.
+
+**4. What is the name of the method used to obtain the estimators of the parameters in the regression model equation?**  
+We used the method of least squares.
+
+**5. For every 1 unit increase of grass density, what is the increase in the infiltration rate?**  
+This is simply the slope estimate b = `r b`.
+
+**6. (a) Would you expect the estimated regression line to go through the point ($\overline{X},\overline{Y}$)?**  
+Yes, the regression line must ALWAYS go through the centroid ($\overline{X},\overline{Y}$).
+
+**7. Based on your answer to Part 1, Question 7(b): (a) Is it likely that the true slope is zero?**  
+No it is not likely that the true slope is zero because the confidence interval does not contain zero.
+
+**(b) An equivalent way of asking the same question is: Is there a significant regression between Y and X at the 5% level of significance, based on the values of the confidence limits?**  
+Yes, their is a significant regression based on a 5% level of significance.
+
+**8. There is a fundamental difference between Questions 8 and 9 in Part 1.  In question 9 you are predicting a specific value of Y for a given X, whereas in Question 8, you were estimating the "mean" of the Y's for a given X. (a) Would you expect the confidence interval for the single value of Y to be wider than that for the population mean of the Y's?**  
+Yes I would expect the confidence interval to be larger for the single value of Y.
+
+**(b) Why?**  
+Because the SE associated with any particular value of Y for a given X, will be larger than the SE associated with the mean of the Y's for a given X; thus ensuring that the confidence interval will be larger.
+
+**9.  From the analysis in Part 1, Question 11, is it true that there is a significant relationship between the two variables under consideration at the 5% level of significance?**  
+Yes, since we rejected the null hypothesis $H_0$: $\beta = 0$ then we conclude that there is a significant relationship between the two variables. 
+
+**10. With respect to Part 1, Question 12: (a) If $\beta=0$, what would you expect the ratio of MS(Reg)/MS(Error) to estimate?**  
+If $\beta=0$ then I would expect the ratio of $\frac{MS(Reg)}{MS(Error)} = 1.0$.
+
+**11. How are the values of the two test statistics t and F in Part 1 Questions 11 and 12 related?**  
+$t^2=F$
+
+**12. What is the relationship between the values of the test statistics in Part 1, Questions 11 and 14?**  
+They are identical.
+
+**13. If the roles of X and Y were accidentally interchanged when someone was using the calculator, then what are the values of the following statistics for the data in Part 1.**  
+(a) SP(XY)=`r round(sum(GolfGreen$X*GolfGreen$Y)-sum(GolfGreen$X)*sum(GolfGreen$Y)/n,3)`
+(b) $b^*$=`r bT`
+(c) $a^*$=`r aT`
+(d) r=`r rT`
+(e) $r^2\cdot{100}$=`r round(rT^2*100,3)`
+(f) t in the t-test=`r round(abs(t13.025),3)`
+(g) $b\cdot{b^*}$=$r^2$=`r round(modelT$coefficients[[2]]*model$coefficients[[2]],3)`
+
+**14. List four equivalent ways to establish if there is a significant relationship between two variables.**  
+(1) Confidence limits for $\beta$,
+(2) t-test $\beta$=0,
+(3) F-test $\beta$=0, and
+(4) t-test $\rho$=0.
+

@@ -1,0 +1,46 @@
+---
+title: 'P8-Environmental Biology: Fish Embryology Data'
+author: "David rt Fraser"
+date: "January 22, 2016"
+output: html_document
+---
+*****
+The data for this experiment resulted from a 2-factor Completely Randomized Design and concerns the effect on the heart rate and respiratory rate of 100 "eleuthroembryos" of rainbow trout (*Oncorhynchus mykiss*) when subjected to two different temperatures and two dissolved oxygen levels.  In the data: X = heart rate, and Y = respiration rate.  This is a common experiment that occurs in courses like the Environmental Biology of Fishes, where these response rates are explained, the units, and especially how to determine them for any fish.  The key issues are: are the two rates correlated?  What environmental conditions increase or decrease the respiration and heart rate in fish?
+
+For this assignment, the main issue is to determine whether or not the 2 variables X and Y are correlated, for *each* of the 4 treatment combinations.  The simplest way to do this is to perform a complete regression and correlation analysis for each of the four data sets.  If it can be established that there is no significant correlation between the two variables (any place), then the two response variables can be assumed to be independent.  Why we need this will become apparent in a latter assignment.
+
+*****
+```{r}
+setwd("~/Documents/StudentUndergraduate/STAT 2050 -Design & Analysis of Experiments/1- Regression & Correlation Analysis/Assignment")
+library(xlsx)
+Fish<-read.xlsx("P8-Fish Embryology Data.xlsx",sheetIndex = 1, header=TRUE, stringsAsFactors=FALSE)
+Fish<-Fish[,-1]
+names(Fish)<-c("L/L;X","L/L;Y","L/H;X","L/H;Y","H/L;X","H/L;Y","H/H;X","H/H;Y")
+Fish<-Fish[-(1:2),]
+Fish<-data.frame(Fish, row.names = seq(1:length(Fish$'L/L;X')))
+Fish$'L.L.X'<-as.numeric(Fish$'L.L.X')
+Fish$'L.L.Y'<-as.numeric(Fish$'L.L.Y')
+Fish$'L.H.X'<-as.numeric(Fish$'L.H.X')
+Fish$'L.H.Y'<-as.numeric(Fish$'L.H.Y')
+Fish$'H.L.X'<-as.numeric(Fish$'H.L.X')
+Fish$'H.L.Y'<-as.numeric(Fish$'H.L.Y')
+Fish$'H.H.X'<-as.numeric(Fish$'H.H.X')
+Fish$'H.H.Y'<-as.numeric(Fish$'H.L.Y')
+model1<-lm(Fish$"L.L.Y"~Fish$"L.L.X")
+model2<-lm(Fish$"L.H.Y"~Fish$"L.H.X")
+model3<-lm(Fish$"H.L.Y"~Fish$"H.L.X")
+model4<-lm(Fish$"H.H.Y"~Fish$"H.H.X")
+```
+###**1. Complete the following table:**  
+ Temp./Oxy. | Low/Low | Low/High | High/Low | High/High |  
+ ------------- | -------------| -------------| -------------| -------------|  
+ a | `r round(model1$coefficients[1],3)` | `r round(model2$coefficients[1],3)` | `r round(model3$coefficients[1],3)` | `r round(model4$coefficients[1],3)` |  
+ b | `r round(model1$coefficients[2],3)` | `r round(model2$coefficients[2],3)` | `r round(model3$coefficients[2],3)` | `r round(model4$coefficients[2],3)` |  
+ r | `r round(cor(Fish$"L.L.Y",Fish$"L.L.X"),3)` | `r round(cor(Fish$"L.H.Y",Fish$"L.H.X"),3)` | `r round(cor(Fish$"H.L.Y",Fish$"H.L.X"),3)` | `r round(cor(Fish$"H.H.Y",Fish$"H.H.X"),3)` |  
+ t | `r round(summary(model1)$coefficients[2,3],3)` | `r round(summary(model2)$coefficients[2,3],3)` | `r round(summary(model3)$coefficients[2,3],3)` | `r round(summary(model4)$coefficients[2,3],3)` |  
+
+###**2. At the 5% level of significance, what is the critical value of the t-test?**
+The t value at the 5% level of significance is `r round(qt(1-.05/2, length(Fish$"L.L.Y")-2),2)`.
+
+###**3. Are the two variables *uncorrelated*; that is, are X and Y *independent* response variables for each of the 4 treatement combinations?**
+Based on the low r values in the chart above, it appears that the two variables are uncorrelated.

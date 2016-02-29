@@ -1,0 +1,63 @@
+---
+title: "P9-A Horticulture Example: The Rotten Apple Data Set"
+author: "David rt Fraser"
+date: "January 29, 2016"
+output: html_document
+---
+This data has been adapted from the paper of J. A. Reid and J. E. Laing, 1976, "Developmental threshold and degree-days to adult emergence for over-wintering pupae of the apple maggot *Rhagoletis pomonella (Walsh)* collected in Ontario", Proceedings of the Entomological Society of Ontario, 107:19-22.
+
+On September 17, 1975 five one-bushel samples of fallen apples from six cultivars were placed on sand indoors.  Puparia were collected and held for a month to allow emergence of non-diapausing individuals.  All remaining puparia were held for a four-month period to break diapause.  Twenty were then placed individually in vials and assigned randomly to the five controlled temperature treatments (X = rearing temperature) in Schmitt insect storage boxes.  The "developmental threshold" is the estimated X value when Y = 0; that is, this threshold is the estimated temperature when the mean percent development per day is zero.  
+
+*****
+```{r}
+library(xlsx)
+setwd("~/Documents/StudentUndergraduate/STAT 2050 -Design & Analysis of Experiments/1- Regression & Correlation Analysis/Assignment")
+Rotten.data <- read.xlsx("P9-The Rotten Data Set.xlsx", sheetIndex = 1, header=TRUE)
+Rotten.data <- t(Rotten.data)
+Rotten.data <- as.data.frame(Rotten.data)
+Rotten.data <- Rotten.data[-1,]
+Rotten.data <- data.frame(Rotten.data, row.names = seq(1:length(Rotten.data$V1)))
+names(Rotten.data) <- c("10","15", "20", "25", "30")
+suppressMessages(library(reshape2))
+Rotten.data<-melt(Rotten.data)
+Rotten.data$variable <- as.numeric(as.character(Rotten.data$variable))
+model<-lm(Rotten.data$value~Rotten.data$variable)
+a <- summary(model)$coefficients[1]
+b <- summary(model)$coefficients[2]
+```
+##**(a) What is the estimated regression line?**
+$\hat{Y}=$ `r a` $+$ `r b` $\cdot{X}$  
+
+##**(b) What is the correlation coefficient?**  
+```{r} 
+r <- sqrt(summary(model)$"r.squared")
+```
+$r =$ `r r`
+
+##**(c) Is there a significant relationship between Y and X?**  
+
+Based on the correlation coefficient, yes there is a very significant relationship.
+
+##**(d) Does a straight line model adequately fit this data?**    
+```{r}
+lofmodel<-lm(Rotten.data$value~as.factor(Rotten.data$variable))
+anova(model,lofmodel)
+```
+Since the lack of fit ANOVA is not significant then I conclude that the straight line model adequately fits this data.  
+
+##**(e) What is the estimate of the development threshold?**  
+
+The development threshold is the estimated X value when Y = 0.
+i.e., 0 = `r a+b`$\cdot{X}$ which implies that X = `r round(-a/b,3)`.
+
+##**(f) What is the 95% confidence interval for the developmental threshold?** 
+```{r}
+n <- anova(model,lofmodel)[1,1]+2
+SSReg <- anova(model)[1,2]
+s.sqrd <- anova(model)[2,3]
+t <- qt(1-.05/2, n-2)
+```
+The confidence interval is given by:
+$X_{0} \pm t_{n-2;0.025} \cdot \sqrt[]{s^{2}_{E} \cdot \frac{(X_{0}-\overline{X})^2}{SS(Reg)}}$
+= (`r round((-a/b)-t*sqrt(s.sqrd*((-a/b)-mean(Rotten.data$variable))^2/SSReg),3)`,`r round((-a/b)+t*sqrt(s.sqrd*((-a/b)-mean(Rotten.data$variable))^2/SSReg),3)`)
+

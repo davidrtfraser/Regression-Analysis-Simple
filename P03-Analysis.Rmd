@@ -1,0 +1,55 @@
+---
+title: "P3-The Lack of Fit Test: The Beetle Data"
+author: "David rt Fraser"
+date: "January 21, 2016"
+output: html_document
+---
+******
+A controlled experiment was performed to determine whether there is a significant regression of beetle survival on egg density.  The following data has been slightly altered from that of the original experiment.  The units of the Y values are degrees radians because the arc-sine transformation was made on the percentage survival of the beetle *Tribolium castaneum* at 4 densities; X is the number of eggs per gram of flour medium.  (Source: R. R. Sokal(1967), Tribolium Inf. Bulletin, Vol.10:142-147.)  
+
+******
+```{r}
+setwd("~/Documents/StudentUndergraduate/STAT 2050 -Design & Analysis of Experiments/1- Regression & Correlation Analysis/Assignment")
+suppressMessages(library(xlsx))
+Beetle<-read.xlsx("P3-The Beetle Data.xlsx",sheetIndex=1, header=TRUE)
+Beetle
+Beetle <- Beetle[,-1]
+names(Beetle)<-c(10,20,30,50)
+library(reshape2)
+Beetle<-melt(Beetle)
+Beetle$variable<-as.numeric(Beetle$variable)*10
+Beetle$variable[16:20]<-50
+names(Beetle)<-c("Egg Density", "Survival")
+Beetle
+BeetleNA<-na.omit(Beetle)
+```
+###**1. Construct a scatter diagram for this data.**
+```{r}
+plot(Beetle$"Egg Density", Beetle$"Survival", main="Beetle Survival & Egg Density", xlab="Density of Beetle Eggs per Gram of Flower Medium", ylab="% Survival of Beetle (degrees radian)")
+```
+
+###**2. State (a) the model equation and (b) the assumptions.**
+(a) $Y_{ij}= \alpha + \beta\cdot{X_i}+\epsilon_{ij}$ where j=1,...,$n_i$ and i=1,...,k.  
+(b) Errors are NI(0,$\sigma^2$).  
+
+###**3. Find the estimated regression equation and superimpose it on your scatter diagram.**
+```{r}
+model <- lm(BeetleNA$"Survival"~BeetleNA$"Egg Density")
+model
+```
+
+```{r} 
+plot(Beetle$"Egg Density", Beetle$Survival, main="Beetle Survival & Egg Density", xlab="Density of Beetle Eggs per Gram of Flower Medium", ylab="% Survival of Beetle (degrees radian)")
+abline(model, col="blue")
+```  
+
+Notice that the output above tells us that the model intercept is `r round(model$coefficient[1],3)` but above the plot doesn't seem to intersect the Y-axis at this value; this is because X=0 is not included in the range of the X-axis.   
+
+###**4. Compete the lack of fit ANOVA Table.**
+```{r}
+lofmodel <- lm(BeetleNA$"Survival"~as.factor(BeetleNA$"Egg Density"))
+anova(model,lofmodel)
+```
+
+###**5. What does the ANOVA table tell you about $\beta$ and the adequacy of the straight line model?**
+We know that $\beta\neq{0}$ and that tells us that the straight line model fits.
